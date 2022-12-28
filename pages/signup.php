@@ -2,18 +2,21 @@
 
     session_start();
 
+    // connect to db
     $database = new PDO(
         'mysql:host=devkinsta_db;dbname=User_Authentication_System',
         'root',
         'r9wz9RSYYaTbjS7v'
     );
-
+    
+    // make sure it's form POST request
     if ( $_SERVER['REQUEST_METHOD'] === 'POST') {
         // trigger sign-up process
         $email = $_POST['email'];
         $password = $_POST['password'];
+        $confirm_password = $_POST['confirm_password'];
 
-        // find the user in database using the provided email
+        // make sure users email wasn't already exists in database
         $statement = $database->prepare(
             'SELECT * FROM users WHERE email = :email'
         );
@@ -24,37 +27,32 @@
         // fetch the result from database
         $user = $statement->fetch();
 
-        // of $user is true, it means the user exists in the database
-        if ($user ) {
-            // check password
-            if ( password_verify( $password, $user['password'] ) 
-            ) {
-                //assign user data to user session
-                $_SESSION['user'] = [
-                    'id' => $user['id'],
-                    'email' => $user['email']
-                ];
+    if ( $user) {
+        echo 'Email already exists';
+    } else {
+        // insert user data into database
+        $statement = $database->prepare(
+            'INSERT INTO users ( email, password )
+            VALUES (:email, :password )'
+        );
 
-                // redirect user back to index
-                header('Location: /');
-                exit;
+        $statement->execute([
+            'email' => $email,
+            'password' => password_hash( $password, PASSWORD_DEFAULT )
+        ]);
 
-            } else {
-                echo 'invalid email or password';
-            }
-        } else {
-            // user doesn't exists
-            echo 'invalid email or password';
+        // echo 'successfully registered';
+         header('Location: //login');
+         exit;
+
         }
     }
-
-
 
 ?>
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Simple Auth - Login</title>
+    <title>Simple Auth - Sign Up</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -75,11 +73,10 @@
     <div class="card rounded shadow-sm mx-auto my-4" style="max-width: 500px;">
       <div class="card-body">
         <h5 class="card-title text-center mb-3 py-3 border-bottom">
-          Login To Your Account
+          Sign Up a New Account
         </h5>
-        <!-- login form-->
-        <form 
-        action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="POST">
+        <!-- sign up form-->
+        <form action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="POST">
           <div class="mb-3">
             <label for="email" class="form-label">Email address</label>
             <input type="email" class="form-control" id="email" name="email" />
@@ -93,15 +90,29 @@
               name="password"
             />
           </div>
+          <div class="mb-3">
+            <label for="confirm_password" class="form-label"
+              >Confirm Password</label
+            >
+            <input
+              type="password"
+              class="form-control"
+              id="confirm_password"
+              name="confirm_password"
+            />
+          </div>
           <div class="d-grid">
-            <button type="submit" class="btn btn-primary btn-fu">Login</button>
+            <button type="submit" class="btn btn-primary btn-fu">
+              Sign Up
+            </button>
           </div>
         </form>
       </div>
     </div>
+
     <!-- Go back link -->
     <div class="text-center">
-      <a href="index.php" class="text-decoration-none"
+      <a href="index.html" class="text-decoration-none"
         ><i class="bi bi-arrow-left-circle"></i> Go back</a
       >
     </div>
