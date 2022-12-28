@@ -2,6 +2,14 @@
         
     session_start();
 
+    if ( !isset( $_SESSION['add_form_csrf_token'] ) ) {
+      $_SESSION['add_form_csrf_token'] = bin2hex( random_bytes(32) );
+    }
+
+    if ( !isset( $_SESSION['delete_form_csrf_token'] ) ) {
+      $_SESSION['delete_form_csrf_token'] = bin2hex( random_bytes(32) );
+    }
+
     $database = new PDO('mysql:host=devkinsta_db;dbname=User_Authentication_System', 'root', 'r9wz9RSYYaTbjS7v');
 
     $query = $database->prepare('SELECT * FROM student');
@@ -14,6 +22,14 @@
     ) {
 
      if ( $_POST['action'] === 'add') {
+
+      if ( $_POST['add_form_csrf_token'] !== $_SESSION['add_form_csrf_token'] )
+      {
+        die("Nice try! But I'm smarter than you!");
+      }
+
+      unset( $_SESSION['add_form_csrf_token'] );
+
         $statement = $database->prepare(
             'INSERT INTO student (`name`)
              VALUES (:name)'
@@ -27,6 +43,14 @@
     }
 
     if ($_POST['action'] === 'delete') {
+
+      if ( $_POST['delete_form_csrf_token'] !== $_SESSION['delete_form_csrf_token'] )
+      {
+        die("Nice try! But I'm smarter than you!");
+      }
+
+      unset ( $_SESSION['delete_form_csrf_token']);
+
         $statement = $database->prepare(
             'DELETE FROM student WHERE id = :id'
         );
@@ -93,6 +117,10 @@
           name="action" 
           value="add"/>
            <button class="btn btn-primary btn-sm rounded ms-2">Add</button>
+           <input 
+          type="hidden" 
+          name="add_form_csrf_token" 
+          value="<?php echo $_SESSION['add_form_csrf_token']; ?>"/>
            <?php endif; ?>
          </form>
         </div>
@@ -121,6 +149,10 @@
                 name="action" 
                 value="delete"/>
              <button class="btn btn-danger">Remove</button>
+             <input 
+              type="hidden" 
+              name="delete_form_csrf_token" 
+              value="<?php echo $_SESSION['delete_form_csrf_token']; ?>"/>
             <?php endif; ?>
             </form>
          </div>

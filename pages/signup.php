@@ -2,6 +2,11 @@
 
     session_start();
 
+    if ( !isset( $_SESSION['signup_form_csrf_token'] ) ) {
+      // generate csrf token
+      $_SESSION['signup_form_csrf_token'] = bin2hex( random_bytes(32) );
+    }
+
     // connect to db
     $database = new PDO(
         'mysql:host=devkinsta_db;dbname=User_Authentication_System',
@@ -11,6 +16,14 @@
     
     // make sure it's form POST request
     if ( $_SERVER['REQUEST_METHOD'] === 'POST') {
+
+      if ( $_POST['signup_form_csrf_token'] !== $_SESSION['signup_form_csrf_token'] )
+      {
+        die("Nice try! But I'm smarter than you!");
+      }
+
+      unset( $_SESSION['signup_form_csrf_token'] );
+
         // trigger sign-up process
         $email = $_POST['email'];
         $password = $_POST['password'];
@@ -106,6 +119,10 @@
               Sign Up
             </button>
           </div>
+          <input 
+          type="hidden" 
+          name="signup_form_csrf_token" 
+          value="<?php echo $_SESSION['signup_form_csrf_token']; ?>"/>
         </form>
       </div>
     </div>
